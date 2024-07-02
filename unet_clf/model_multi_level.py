@@ -2,6 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.transforms import functional as TF
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
+from data_vis import SpineDataset
+
+# Access to GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class DoubleConv(nn.Module):  # same as above.
@@ -85,16 +91,3 @@ outputs = model(input_tensor)
 for i, output in enumerate(outputs):
     print(f"Output for head {i}: {output.shape}")
 
-
-
-##### TIP #####
-# Dont do :
-# loss1 = computeloss(...)
-# loss2 = computeloss(...)
-# loss = loss1+loss2 
-# loss.backprop()
-# Do : # 
-# loss1 = computeloss(...)
-# loss1.backprop()
-# loss2 = computeloss(...)
-# loss2.backprop()
