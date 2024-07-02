@@ -9,13 +9,15 @@ from data_vis import SpineDataset, transform
 from model_multi_level import DoubleConv, MultiLevelUnet
 from check_data import im_list_dcm
 
+########## Max Width: 384, Max Height: 540, Max Images: 54 ###########
+
 
 # Access to GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 transform = transforms.Compose([
-    transforms.Pad((0, 0, 255 - width, 255 - height)),
+    transforms.Pad((0, 0, 384, 540)),
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.6116], std=[0.2425])
@@ -24,6 +26,9 @@ transform = transforms.Compose([
 # Load dataset
 train_dataset = SpineDataset(im_list_dcm, transform=transform)
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+
+dataset = SpineDataset(im_list_dcm, transform=transform)
+dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 # Define model
 model = MultiLevelUnet(in_channels=1, num_heads=25, num_classes_per_head=3).to(device)

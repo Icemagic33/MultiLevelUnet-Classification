@@ -82,10 +82,10 @@ class MultiLevelUnet(nn.Module):
         return outputs
 
 
-model = MultiLevelUnet(in_channels=1, num_heads=25, num_classes_per_head=3)
-# Example input tensor with batch size 4
-input_tensor = torch.randn(4, 1, 256, 256)
-outputs = model(input_tensor)
+# model = MultiLevelUnet(in_channels=1, num_heads=25, num_classes_per_head=3)
+# # Example input tensor with batch size 4
+# input_tensor = torch.randn(4, 1, 256, 256)
+# outputs = model(input_tensor)
 
 # # Each output corresponds to the predictions for a specific condition-level combination
 # for i, output in enumerate(outputs):
