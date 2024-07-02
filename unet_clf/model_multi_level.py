@@ -84,3 +84,17 @@ outputs = model(input_tensor)
 # Each output corresponds to the predictions for a specific condition-level combination
 for i, output in enumerate(outputs):
     print(f"Output for head {i}: {output.shape}")
+
+
+
+##### TIP #####
+# Dont do :
+# loss1 = computeloss(...)
+# loss2 = computeloss(...)
+# loss = loss1+loss2 
+# loss.backprop()
+# Do : # 
+# loss1 = computeloss(...)
+# loss1.backprop()
+# loss2 = computeloss(...)
+# loss2.backprop()
