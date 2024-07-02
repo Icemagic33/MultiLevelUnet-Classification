@@ -87,7 +87,31 @@ model = MultiLevelUnet(in_channels=1, num_heads=25, num_classes_per_head=3)
 input_tensor = torch.randn(4, 1, 256, 256)
 outputs = model(input_tensor)
 
-# Each output corresponds to the predictions for a specific condition-level combination
-for i, output in enumerate(outputs):
-    print(f"Output for head {i}: {output.shape}")
-
+# # Each output corresponds to the predictions for a specific condition-level combination
+# for i, output in enumerate(outputs):
+#     print(f"Output for head {i}: {output.shape}")
+'''Output for head 0: torch.Size([4, 3])
+Output for head 1: torch.Size([4, 3])
+Output for head 2: torch.Size([4, 3])
+Output for head 3: torch.Size([4, 3])
+Output for head 4: torch.Size([4, 3])
+Output for head 5: torch.Size([4, 3])
+Output for head 6: torch.Size([4, 3])
+Output for head 7: torch.Size([4, 3])
+Output for head 8: torch.Size([4, 3])
+Output for head 9: torch.Size([4, 3])
+Output for head 10: torch.Size([4, 3])
+Output for head 11: torch.Size([4, 3])
+Output for head 12: torch.Size([4, 3])
+Output for head 13: torch.Size([4, 3])
+Output for head 14: torch.Size([4, 3])
+Output for head 15: torch.Size([4, 3])
+Output for head 16: torch.Size([4, 3])
+Output for head 17: torch.Size([4, 3])
+Output for head 18: torch.Size([4, 3])
+Output for head 19: torch.Size([4, 3])
+Output for head 20: torch.Size([4, 3])
+Output for head 21: torch.Size([4, 3])
+Output for head 22: torch.Size([4, 3])
+Output for head 23: torch.Size([4, 3])
+Output for head 24: torch.Size([4, 3])'''

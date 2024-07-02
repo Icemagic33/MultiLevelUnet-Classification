@@ -1,4 +1,3 @@
-from check_data import im_list_dcm
 import torch 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +9,7 @@ import glob
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
+from check_data import im_list_dcm
 from data_vis import SpineDataset
 
 
