@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 # Paths for data
 csv_file = "/home/adam/processed_data/processed_csv/df_train_OneHot.csv"
-root = "/home/adam/processed_data/rsna_dataset_dcm2Image/train_images"
+root = "/home/adam/processed_data/rsna-dataset-dcm2image/train_images"
 
 
 # Data preprocessing with augmentation
@@ -73,9 +73,8 @@ def get_subset_sampler(dataset, num_samples):
 # Set the subset size 
 subset_size = 300
 
-
 # Create data loaders with subset sampler
-batch_size = 9
+batch_size = 30
 train_sampler = get_subset_sampler(dataset, subset_size)
 val_sampler = get_subset_sampler(dataset, subset_size // 10)  # Smaller validation subset
 train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
@@ -143,7 +142,7 @@ best_model_wts = copy.deepcopy(model.state_dict())
 patience = 20
 wait = 0
 criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-5) 
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5) 
 activate = nn.Sigmoid()
 
 
@@ -160,56 +159,6 @@ def calculate_accuracy(outputs, labels):
     correct = (preds == labels).float().sum()
     accuracy = correct / labels.numel()
     return accuracy
-
-
-# Training the model
-num_epochs = 50
-for epoch in range(num_epochs):
-    model.train()
-    running_loss = 0.0
-    running_accuracy = 0.0
-    total_batches = len(train_loader)
-    progress_bar = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}", leave=True)
-
-    for batch_idx, (images, labels) in enumerate(progress_bar):
-        images, labels = images.to(device), labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-        running_loss += loss.item() * images.size(0)
-        running_accuracy += calculate_accuracy(outputs, labels).item() * images.size(0)
-        postfix = {'loss': f'{loss:.4f}', 'batch': f'{batch_idx + 1}/{total_batches}'}
-        progress_bar.set_postfix(postfix)
-
-    epoch_loss = running_loss / subset_size  # Adjust based on the subset size
-    epoch_accuracy = running_accuracy / subset_size
-    train_losses.append(epoch_loss)
-    train_accuracies.append(epoch_accuracy)
-    
-    # Validate after each epoch
-    validate_loss, validate_accuracy = validate(model=model, criterion=criterion, val_loader=val_loader)
-    val_losses.append(validate_loss)
-    val_accuracies.append(validate_accuracy)
-    
-    if epoch_loss < min_loss:
-        min_loss = epoch_loss
-        best_model_wts = copy.deepcopy(model.state_dict())
-        torch.save(model.state_dict(), 'best_model.pth')
-        wait = 0
-    else:
-        wait += 1
-        if wait >= patience:
-            print(f"Early stopping at epoch {epoch + 1}")
-            break
-
-    print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}")
-    print(f'Validation Loss: {validate_loss:.4f}, Validation Accuracy: {validate_accuracy:.4f}')
-
-
-model.load_state_dict(best_model_wts)
 
 
 # Validate the model
@@ -233,7 +182,9 @@ def validate(model, criterion, val_loader):
     return avg_loss, avg_accuracy
 
 
-# Perform validation
+# Training the model
+num_epochs = 25
+
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
@@ -277,6 +228,7 @@ for epoch in range(num_epochs):
 
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}")
     print(f'Validation Loss: {validate_loss:.4f}, Validation Accuracy: {validate_accuracy:.4f}')
+
 
 model.load_state_dict(best_model_wts)
 
@@ -301,6 +253,8 @@ plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.legend()
 
+# Save the figure
+plt.savefig('plots/cnn_training_validation_metrics.png')
 plt.show()
 
 
