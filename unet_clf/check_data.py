@@ -151,13 +151,28 @@ def display_images(images, title, max_images_per_row=4, save_path=None):
 
 
 df_coor = pd.read_csv(f'{fd}/train_label_coordinates.csv')
-# print(df_coor.head())
-'''   study_id  series_id  instance_number                condition  level           x           y
-0   4003253     702807833               8     Spinal Canal Stenosis  L1/L2  322.831858  227.964602
-1   4003253     702807833               8     Spinal Canal Stenosis  L2/L3  320.571429  295.714286
-2   4003253     702807833               8     Spinal Canal Stenosis  L3/L4  323.030303  371.818182
-3   4003253     702807833               8     Spinal Canal Stenosis  L4/L5  335.292035  427.327434
-4   4003253     702807833               8     Spinal Canal Stenosis  L5/S1  353.415929  483.964602'''
+print(df_coor.head(20))
+''' study_id   series_id  instance_number                         condition  level           x           y
+0    4003253   702807833                8             Spinal Canal Stenosis  L1/L2  322.831858  227.964602
+1    4003253   702807833                8             Spinal Canal Stenosis  L2/L3  320.571429  295.714286
+2    4003253   702807833                8             Spinal Canal Stenosis  L3/L4  323.030303  371.818182
+3    4003253   702807833                8             Spinal Canal Stenosis  L4/L5  335.292035  427.327434
+4    4003253   702807833                8             Spinal Canal Stenosis  L5/S1  353.415929  483.964602
+5    4003253  1054713880                4  Right Neural Foraminal Narrowing  L4/L5  187.961759  251.839388
+6    4003253  1054713880                4  Right Neural Foraminal Narrowing  L5/S1  198.240918  285.613767
+7    4003253  1054713880                5  Right Neural Foraminal Narrowing  L3/L4  187.227533  210.722753
+8    4003253  1054713880                6  Right Neural Foraminal Narrowing  L1/L2  194.569790  127.755258
+9    4003253  1054713880                6  Right Neural Foraminal Narrowing  L2/L3  191.632887  165.934990
+10   4003253  1054713880               11   Left Neural Foraminal Narrowing  L1/L2  196.070671  126.021201
+11   4003253  1054713880               11   Left Neural Foraminal Narrowing  L4/L5  186.504472  251.592129
+12   4003253  1054713880               11   Left Neural Foraminal Narrowing  L5/S1  197.100569  289.457306
+13   4003253  1054713880               12   Left Neural Foraminal Narrowing  L2/L3  191.321555  170.120141
+14   4003253  1054713880               12   Left Neural Foraminal Narrowing  L3/L4  187.878354  217.245081
+15   4003253  2448190387                3        Left Subarticular Stenosis  L1/L2  179.126448  161.235521
+16   4003253  2448190387                4       Right Subarticular Stenosis  L1/L2  145.288771  158.624642
+17   4003253  2448190387               11        Left Subarticular Stenosis  L2/L3  180.979730  158.764479
+18   4003253  2448190387               11       Right Subarticular Stenosis  L2/L3  145.900042  157.096466
+19   4003253  2448190387               19        Left Subarticular Stenosis  L3/L4  176.037645  157.528958'''
 
 def display_coor_on_img(c, i, title, save_path='only_severe_cases.png'):
     center_coordinates = (int(c['x']), int(c['y']))

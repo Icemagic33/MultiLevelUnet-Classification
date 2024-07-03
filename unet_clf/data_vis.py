@@ -13,7 +13,7 @@ import os
 import glob
 from tqdm import tqdm
 import warnings
-from check_data import im_list_dcm
+from check_data import im_list_dcm, df_coor
 
 # Access to GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -37,11 +37,45 @@ transform = transforms.Compose([
 
 
 # Define the SpineDataset class
+# class SpineDataset(Dataset):
+#     def __init__(self, im_list_dcm, transform=None):
+#         self.im_list_dcm = im_list_dcm
+#         self.study_ids = list(im_list_dcm.keys())
+#         self.transform = transform
+
+#     def __len__(self):
+#         return len(self.study_ids)
+
+#     def __getitem__(self, idx):
+#         study_id = self.study_ids[idx]
+#         data = self.im_list_dcm[study_id]
+        
+#         series_images = []
+#         for image_dict in data['images']:
+#             img = image_dict['dicom'].pixel_array
+#             img = img.astype(np.float32)  # Work with float32 to preserve precision
+#             img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255  # Normalize to 0-255
+#             img = img.astype(np.uint8)  # Convert to uint8 for the transformation
+#             img = np.expand_dims(img, axis=-1)  # Add channel dimension
+#             img = np.repeat(img, 3, axis=-1)  # Repeat the channel to convert to 3 channels
+#             if self.transform:
+#                 img = self.transform(img)
+#             series_images.append(img)
+
+#         if len(series_images) == 0:
+#             raise RuntimeError(f"No valid images found for study ID {study_id}")
+
+#         all_images = torch.stack(series_images, dim=0)
+#         labels = torch.tensor(0)  # Placeholder for labels if not available
+        
+#         return all_images, labels
 class SpineDataset(Dataset):
-    def __init__(self, im_list_dcm, transform=None):
+    def __init__(self, im_list_dcm, df_coor, transform=None, max_images=54):
         self.im_list_dcm = im_list_dcm
+        self.df_coor = df_coor
         self.study_ids = list(im_list_dcm.keys())
         self.transform = transform
+        self.max_images = max_images
 
     def __len__(self):
         return len(self.study_ids)
@@ -56,22 +90,33 @@ class SpineDataset(Dataset):
             img = img.astype(np.float32)  # Work with float32 to preserve precision
             img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255  # Normalize to 0-255
             img = img.astype(np.uint8)  # Convert to uint8 for the transformation
-            img = np.expand_dims(img, axis=-1)  # Add channel dimension
-            img = np.repeat(img, 3, axis=-1)  # Repeat the channel to convert to 3 channels
             if self.transform:
                 img = self.transform(img)
             series_images.append(img)
 
-        if len(series_images) == 0:
-            raise RuntimeError(f"No valid images found for study ID {study_id}")
+        # Pad with zeros if the number of images is less than max_images
+        while len(series_images) < self.max_images:
+            series_images.append(torch.zeros_like(series_images[0]))
 
+        # Stack images along the batch dimension and flatten to shape (max_images, 3, 256, 256)
         all_images = torch.stack(series_images, dim=0)
-        labels = torch.tensor(0)  # Placeholder for labels if not available
         
-        return all_images, labels
+        # Extract labels for this study
+        labels = self.df_coor[self.df_coor['study_id'] == int(study_id)]
+        label_tensor = torch.zeros((25,), dtype=torch.long)  # Placeholder for 25 conditions
+
+        for _, row in labels.iterrows():
+            condition_idx = condition_map[row['condition']]
+            level_idx = level_map[row['level']]
+            severity_idx = map_severity(row)  # Use actual severity data here
+            label_tensor[condition_idx * 5 + level_idx] = severity_idx
+
+        return all_images, label_tensor
+
+
 
 # Create SpineDataset instance with the updated transform
-dataset = SpineDataset(im_list_dcm, transform=transform)
+dataset = SpineDataset(im_list_dcm, df_coor, transform=transform)
 loader = DataLoader(dataset, batch_size=1, shuffle=True)
 
 # Save the first image in the loader as a PNG file
