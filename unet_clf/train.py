@@ -73,19 +73,34 @@ train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 
+# Calculate class weights
+# Assuming the distribution is known (e.g., from the provided graph):
+total_samples = len(df_coor)
+class_counts = {
+    'normal/mild': total_samples * 0.70,
+    'moderate': total_samples * 0.20,
+    'severe': total_samples * 0.10
+}
+class_weights = {severity: total_samples / count for severity, count in class_counts.items()}
+weights = torch.tensor([class_weights['normal/mild'], class_weights['moderate'], class_weights['severe']], dtype=torch.float).to(device)
+
 # Define loss and optimizer
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss(weight=weights)
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
 # Lists to store loss values
 train_loss_values = []
 val_loss_values = []
+train_accuracy_values = []
+val_accuracy_values = []
 
 # Training loop
 num_epochs = 30
 for epoch in range(num_epochs):
     model.train()
     running_train_loss = 0.0
+    correct_train_preds = 0
+    total_train_preds = 0
     for batch in train_loader:
         images, labels = batch
         images = images.view(-1, 1, 256, 256).to(device)  # Flatten batch of studies into batch of images
@@ -103,14 +118,23 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
         running_train_loss += loss.item()
+        
+        # Calculate accuracy
+        _, predicted = torch.max(outputs, 1)
+        correct_train_preds += (predicted == labels).sum().item()
+        total_train_preds += labels.size(0)
 
     epoch_train_loss = running_train_loss / len(train_loader)
     train_loss_values.append(epoch_train_loss)
-    print(f'Epoch [{epoch+1}/{num_epochs}], Training Loss: {epoch_train_loss:.10f}')
+    train_accuracy = correct_train_preds / total_train_preds
+    train_accuracy_values.append(train_accuracy)
+    print(f'Epoch [{epoch+1}/{num_epochs}], Training Loss: {epoch_train_loss:.10f}, Training Accuracy: {train_accuracy:.4f}')
 
     # Validation loop
     model.eval()
     running_val_loss = 0.0
+    correct_val_preds = 0
+    total_val_preds = 0
     with torch.no_grad():
         for batch in val_loader:
             images, labels = batch
@@ -124,13 +148,20 @@ for epoch in range(num_epochs):
             outputs = torch.cat(outputs, dim=0)
             loss = criterion(outputs, labels)
             running_val_loss += loss.item()
+            
+            # Calculate accuracy
+            _, predicted = torch.max(outputs, 1)
+            correct_val_preds += (predicted == labels).sum().item()
+            total_val_preds += labels.size(0)
 
     epoch_val_loss = running_val_loss / len(val_loader)
     val_loss_values.append(epoch_val_loss)
-    print(f'Epoch [{epoch+1}/{num_epochs}], Validation Loss: {epoch_val_loss:.10f}')
+    val_accuracy = correct_val_preds / total_val_preds
+    val_accuracy_values.append(val_accuracy)
+    print(f'Epoch [{epoch+1}/{num_epochs}], Validation Loss: {epoch_val_loss:.10f}, Validation Accuracy: {val_accuracy:.4f}')
 
 print('Finished Training')
-# torch.save(model.state_dict(), 'multi_level_unet.pth')
+torch.save(model.state_dict(), 'multi_level_unet.pth')
 
 plt.figure()
 # Plot the loss values
@@ -141,4 +172,15 @@ plt.ylabel('Loss')
 plt.title('Training and Validation Loss over Epochs')
 plt.legend()
 plt.savefig('training_and_validation_loss_over_epochs.png')
+plt.show()
+
+plt.figure()
+# Plot the accuracy values
+plt.plot(train_accuracy_values, label='Training Accuracy')
+plt.plot(val_accuracy_values, label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Training and Validation Accuracy over Epochs')
+plt.legend()
+plt.savefig('training_and_validation_accuracy_over_epochs.png')
 plt.show()
